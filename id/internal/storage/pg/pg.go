@@ -8,7 +8,7 @@ import (
 )
 
 type Postgres struct {
-	DB *sqlx.DB
+	Db *sqlx.DB
 }
 
 func New(conf *configs.Config) (*Postgres, error) {

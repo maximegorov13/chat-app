@@ -19,7 +19,7 @@ type PostgresConfig struct {
 	Url string
 }
 
-func LoadConfig() (*Config, error) {
+func Load() (*Config, error) {
 	if err := godotenv.Load(); err != nil {
 		return nil, fmt.Errorf("error loading .env file: %w", err)
 	}

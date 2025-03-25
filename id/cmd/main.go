@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	conf, err := configs.LoadConfig()
+	conf, err := configs.Load()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -19,7 +19,7 @@ func main() {
 		log.Fatal(err)
 	}
 	defer func() {
-		if err := pgClient.DB.Close(); err != nil {
+		if err := pgClient.Db.DB.Close(); err != nil {
 			log.Printf("Error when closing the Postgres connection: %v\n", err)
 		}
 	}()
