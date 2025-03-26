@@ -2,13 +2,15 @@ package pg
 
 import (
 	"fmt"
+	"github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"github.com/maximegorov13/chat-app/id/configs"
 )
 
 type Postgres struct {
-	Db *sqlx.DB
+	Sqlx    *sqlx.DB
+	Builder squirrel.StatementBuilderType
 }
 
 func New(conf *configs.Config) (*Postgres, error) {
@@ -19,5 +21,9 @@ func New(conf *configs.Config) (*Postgres, error) {
 	if err = db.Ping(); err != nil {
 		return nil, fmt.Errorf("failed to ping database: %w", err)
 	}
-	return &Postgres{db}, nil
+	builder := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
+	return &Postgres{
+		Sqlx:    db,
+		Builder: builder,
+	}, nil
 }
