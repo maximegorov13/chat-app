@@ -31,7 +31,9 @@ func main() {
 	userRepo := userpg.NewUserRepository(pgClient)
 
 	// Services
-	userService := userservice.NewUserService(userRepo)
+	userService := userservice.NewUserService(userservice.UserServiceDeps{
+		UserRepo: userRepo,
+	})
 
 	router := http.NewServeMux()
 

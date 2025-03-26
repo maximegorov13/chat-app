@@ -3,26 +3,31 @@ package service
 import (
 	"context"
 	"github.com/maximegorov13/chat-app/id/internal/user"
+	"github.com/maximegorov13/chat-app/id/pkg/apperrors"
 	"golang.org/x/crypto/bcrypt"
 )
 
-type UserService struct {
-	repo user.UserRepository
+type UserServiceDeps struct {
+	UserRepo user.UserRepository
 }
 
-func NewUserService(repo user.UserRepository) *UserService {
+type UserService struct {
+	userRepo user.UserRepository
+}
+
+func NewUserService(deps UserServiceDeps) *UserService {
 	return &UserService{
-		repo: repo,
+		userRepo: deps.UserRepo,
 	}
 }
 
 func (s *UserService) Register(ctx context.Context, req *user.RegisterRequest) (*user.User, error) {
-	existedUser, err := s.repo.FindByLogin(ctx, req.Login)
+	existedUser, err := s.userRepo.FindByLogin(ctx, req.Login)
 	if err != nil {
 		return nil, err
 	}
 	if existedUser != nil {
-		return nil, user.ErrUserExists
+		return nil, apperrors.ErrUserExists
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
@@ -36,7 +41,7 @@ func (s *UserService) Register(ctx context.Context, req *user.RegisterRequest) (
 		Password: string(hashedPassword),
 	}
 
-	if err = s.repo.Create(ctx, u); err != nil {
+	if err = s.userRepo.Create(ctx, u); err != nil {
 		return nil, err
 	}
 

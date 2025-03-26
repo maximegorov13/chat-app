@@ -21,7 +21,9 @@ func New(conf *configs.Config) (*Postgres, error) {
 	if err = db.Ping(); err != nil {
 		return nil, fmt.Errorf("failed to ping database: %w", err)
 	}
+
 	builder := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
+	
 	return &Postgres{
 		Sqlx:    db,
 		Builder: builder,
