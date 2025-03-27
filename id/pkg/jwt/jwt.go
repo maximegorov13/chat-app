@@ -1,15 +1,10 @@
 package jwt
 
 import (
-	"errors"
 	"fmt"
 	"github.com/golang-jwt/jwt/v5"
 	"strconv"
 	"time"
-)
-
-var (
-	ErrInvalidToken = errors.New("invalid token")
 )
 
 type Claims struct {
@@ -63,7 +58,7 @@ func (j *JWT) ValidateToken(token string) (bool, Claims) {
 func (j *JWT) ExtractUserID(token string) (string, error) {
 	valid, claims := j.ValidateToken(token)
 	if !valid {
-		return "", ErrInvalidToken
+		return "", fmt.Errorf("invalid token")
 	}
 
 	if claims.Subject == "" {

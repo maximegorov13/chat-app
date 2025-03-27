@@ -47,3 +47,31 @@ func (s *UserService) Register(ctx context.Context, req *user.RegisterRequest) (
 
 	return u, nil
 }
+
+func (s *UserService) UpdateUser(ctx context.Context, userID int64, req *user.UpdateUserRequest) (*user.User, error) {
+	existedUser, err := s.userRepo.FindByLogin(ctx, req.Login)
+	if err != nil {
+		return nil, err
+	}
+	if existedUser == nil {
+		return nil, apperrors.ErrNotFound
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, err
+	}
+
+	u := &user.User{
+		ID:       userID,
+		Login:    req.Login,
+		Name:     req.Name,
+		Password: string(hashedPassword),
+	}
+
+	if err = s.userRepo.Update(ctx, u); err != nil {
+		return nil, err
+	}
+
+	return u, nil
+}

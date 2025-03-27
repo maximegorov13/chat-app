@@ -4,9 +4,11 @@ import (
 	"github.com/maximegorov13/chat-app/id/configs"
 	"github.com/maximegorov13/chat-app/id/internal/user"
 	"github.com/maximegorov13/chat-app/id/pkg/apperrors"
+	"github.com/maximegorov13/chat-app/id/pkg/middleware"
 	"github.com/maximegorov13/chat-app/id/pkg/req"
 	"github.com/maximegorov13/chat-app/id/pkg/res"
 	"net/http"
+	"strconv"
 )
 
 type UserHandlerDeps struct {
@@ -26,6 +28,7 @@ func NewUserHandler(router *http.ServeMux, deps UserHandlerDeps) {
 	}
 
 	router.HandleFunc("POST /api/users", handler.Register())
+	router.Handle("PUT /api/users/{id}", middleware.Auth(handler.UpdateUser(), handler.conf))
 }
 
 func (h *UserHandler) Register() http.HandlerFunc {
@@ -49,5 +52,45 @@ func (h *UserHandler) Register() http.HandlerFunc {
 		}
 
 		res.Json(w, data, http.StatusCreated)
+	}
+}
+
+func (h *UserHandler) UpdateUser() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		body, err := req.HandleBody[user.UpdateUserRequest](r)
+		if err != nil {
+			apperrors.HandleError(w, err)
+			return
+		}
+
+		idStr := r.PathValue("id")
+		userId, err := strconv.ParseInt(idStr, 10, 64)
+		if err != nil {
+			apperrors.HandleError(w, apperrors.ErrBadRequest)
+		}
+
+		tokenUserIDStr, ok := r.Context().Value(middleware.ContextUserIdKey).(string)
+		tokenUserID, err := strconv.ParseInt(tokenUserIDStr, 10, 64)
+		if err != nil {
+			apperrors.HandleError(w, apperrors.ErrBadRequest)
+		}
+		if !ok || tokenUserID != userId {
+			apperrors.HandleError(w, apperrors.ErrForbidden)
+			return
+		}
+
+		u, err := h.userService.UpdateUser(r.Context(), tokenUserID, body)
+		if err != nil {
+			apperrors.HandleError(w, err)
+			return
+		}
+
+		data := user.UpdateUserResponse{
+			ID:    u.ID,
+			Login: u.Login,
+			Name:  u.Name,
+		}
+
+		res.Json(w, data, http.StatusOK)
 	}
 }

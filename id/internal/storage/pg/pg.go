@@ -9,8 +9,8 @@ import (
 )
 
 type Postgres struct {
-	Sqlx    *sqlx.DB
-	Builder squirrel.StatementBuilderType
+	Sqlx *sqlx.DB
+	Sb   squirrel.StatementBuilderType
 }
 
 func New(conf *configs.Config) (*Postgres, error) {
@@ -23,9 +23,9 @@ func New(conf *configs.Config) (*Postgres, error) {
 	}
 
 	builder := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
-	
+
 	return &Postgres{
-		Sqlx:    db,
-		Builder: builder,
+		Sqlx: db,
+		Sb:   builder,
 	}, nil
 }
