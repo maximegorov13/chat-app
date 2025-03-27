@@ -28,7 +28,12 @@ func New(err error, code int, message string) *Error {
 
 var (
 	ErrInvalidRequestBody = New(nil, http.StatusBadRequest, "invalid request body")
-	ErrUserExists         = New(nil, http.StatusConflict, "user already exists")
+	ErrValidationFailed   = New(nil, http.StatusBadRequest, "validation failed")
+
+	ErrUnauthorized       = New(nil, http.StatusUnauthorized, "unauthorized")
+	ErrInvalidCredentials = New(nil, http.StatusUnauthorized, "invalid credentials")
+
+	ErrUserExists = New(nil, http.StatusConflict, "user already exists")
 
 	ErrInternalServerError = New(nil, http.StatusInternalServerError, "internal server error")
 )

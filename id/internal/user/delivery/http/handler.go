@@ -42,12 +42,12 @@ func (h *UserHandler) Register() http.HandlerFunc {
 			return
 		}
 
-		response := user.RegisterResponse{
+		data := user.RegisterResponse{
 			ID:    u.ID,
 			Login: u.Login,
 			Name:  u.Name,
 		}
 
-		res.Json(w, response, http.StatusCreated)
+		res.Json(w, data, http.StatusCreated)
 	}
 }

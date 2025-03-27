@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"github.com/maximegorov13/chat-app/id/configs"
+	authhttp "github.com/maximegorov13/chat-app/id/internal/auth/delivery/http"
+	authservice "github.com/maximegorov13/chat-app/id/internal/auth/service"
 	"github.com/maximegorov13/chat-app/id/internal/storage/pg"
 	userhttp "github.com/maximegorov13/chat-app/id/internal/user/delivery/http"
 	userpg "github.com/maximegorov13/chat-app/id/internal/user/repository/pg"
@@ -34,6 +36,9 @@ func main() {
 	userService := userservice.NewUserService(userservice.UserServiceDeps{
 		UserRepo: userRepo,
 	})
+	authService := authservice.NewAuthService(authservice.AuthServiceDeps{
+		UserRepo: userRepo,
+	})
 
 	router := http.NewServeMux()
 
@@ -41,6 +46,10 @@ func main() {
 	userhttp.NewUserHandler(router, userhttp.UserHandlerDeps{
 		Conf:        conf,
 		UserService: userService,
+	})
+	authhttp.NewAuthHandler(router, authhttp.AuthHandlerDeps{
+		Conf:        conf,
+		AuthService: authService,
 	})
 
 	server := &http.Server{

@@ -43,13 +43,13 @@ func (repo *UserRepository) FindByLogin(ctx context.Context, login string) (*use
 		return nil, err
 	}
 
-	var user user.User
-	if err = repo.db.Sqlx.GetContext(ctx, &user, query, args...); err != nil {
+	var u user.User
+	if err = repo.db.Sqlx.GetContext(ctx, &u, query, args...); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
 		}
 		return nil, err
 	}
 
-	return &user, nil
+	return &u, nil
 }
