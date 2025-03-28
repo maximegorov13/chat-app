@@ -3,6 +3,7 @@ package http
 import (
 	"github.com/maximegorov13/chat-app/id/configs"
 	"github.com/maximegorov13/chat-app/id/internal/user"
+	"github.com/maximegorov13/chat-app/id/pkg/appcontext"
 	"github.com/maximegorov13/chat-app/id/pkg/apperrors"
 	"github.com/maximegorov13/chat-app/id/pkg/middleware"
 	"github.com/maximegorov13/chat-app/id/pkg/req"
@@ -69,12 +70,12 @@ func (h *UserHandler) UpdateUser() http.HandlerFunc {
 			apperrors.HandleError(w, apperrors.ErrBadRequest)
 		}
 
-		tokenUserIDStr, ok := r.Context().Value(middleware.ContextUserIdKey).(string)
+		tokenUserIDStr := appcontext.GetContextUserId(r.Context())
 		tokenUserID, err := strconv.ParseInt(tokenUserIDStr, 10, 64)
 		if err != nil {
 			apperrors.HandleError(w, apperrors.ErrBadRequest)
 		}
-		if !ok || tokenUserID != userId {
+		if tokenUserID != userId {
 			apperrors.HandleError(w, apperrors.ErrForbidden)
 			return
 		}

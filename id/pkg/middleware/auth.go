@@ -1,18 +1,12 @@
 package middleware
 
 import (
-	"context"
 	"github.com/maximegorov13/chat-app/id/configs"
+	"github.com/maximegorov13/chat-app/id/pkg/appcontext"
 	"github.com/maximegorov13/chat-app/id/pkg/apperrors"
 	"github.com/maximegorov13/chat-app/id/pkg/jwt"
 	"net/http"
 	"strings"
-)
-
-type contextKey string
-
-const (
-	ContextUserIdKey contextKey = "ContextUserIdKey"
 )
 
 func Auth(next http.Handler, conf *configs.Config) http.Handler {
@@ -42,7 +36,7 @@ func Auth(next http.Handler, conf *configs.Config) http.Handler {
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), ContextUserIdKey, claims.Subject)
+		ctx := appcontext.SetContextUserId(r.Context(), claims.Subject)
 		r = r.WithContext(ctx)
 
 		next.ServeHTTP(w, r)
