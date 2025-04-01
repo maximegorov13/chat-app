@@ -2,9 +2,11 @@ package service
 
 import (
 	"context"
-	"github.com/maximegorov13/chat-app/id/internal/user"
-	"github.com/maximegorov13/chat-app/id/pkg/apperrors"
+
 	"golang.org/x/crypto/bcrypt"
+
+	"github.com/maximegorov13/chat-app/id/internal/apperrors"
+	"github.com/maximegorov13/chat-app/id/internal/user"
 )
 
 type UserServiceDeps struct {

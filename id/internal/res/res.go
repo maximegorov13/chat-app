@@ -2,8 +2,9 @@ package res
 
 import (
 	"encoding/json"
-	"github.com/maximegorov13/chat-app/id/pkg/apperrors"
 	"net/http"
+
+	"github.com/maximegorov13/chat-app/id/internal/apperrors"
 )
 
 func Json(w http.ResponseWriter, data any, statusCode int) {

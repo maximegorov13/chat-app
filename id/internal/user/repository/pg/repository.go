@@ -4,7 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+
 	"github.com/Masterminds/squirrel"
+
 	"github.com/maximegorov13/chat-app/id/internal/storage/pg"
 	"github.com/maximegorov13/chat-app/id/internal/user"
 )

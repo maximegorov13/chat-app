@@ -1,14 +1,15 @@
 package http
 
 import (
-	"github.com/maximegorov13/chat-app/id/configs"
-	"github.com/maximegorov13/chat-app/id/internal/auth"
-	"github.com/maximegorov13/chat-app/id/pkg/apperrors"
-	"github.com/maximegorov13/chat-app/id/pkg/jwt"
-	"github.com/maximegorov13/chat-app/id/pkg/req"
-	"github.com/maximegorov13/chat-app/id/pkg/res"
 	"net/http"
 	"time"
+
+	"github.com/maximegorov13/chat-app/id/configs"
+	"github.com/maximegorov13/chat-app/id/internal/apperrors"
+	"github.com/maximegorov13/chat-app/id/internal/auth"
+	"github.com/maximegorov13/chat-app/id/internal/req"
+	"github.com/maximegorov13/chat-app/id/internal/res"
+	"github.com/maximegorov13/chat-app/id/pkg/jwt"
 )
 
 type AuthHandlerDeps struct {

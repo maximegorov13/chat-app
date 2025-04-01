@@ -1,8 +1,6 @@
 package user
 
-import (
-	"context"
-)
+import "context"
 
 type UserRepository interface {
 	Create(ctx context.Context, user *User) error

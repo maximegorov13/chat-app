@@ -2,6 +2,9 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"net/http"
+
 	"github.com/maximegorov13/chat-app/id/configs"
 	authhttp "github.com/maximegorov13/chat-app/id/internal/auth/delivery/http"
 	authservice "github.com/maximegorov13/chat-app/id/internal/auth/service"
@@ -9,8 +12,6 @@ import (
 	userhttp "github.com/maximegorov13/chat-app/id/internal/user/delivery/http"
 	userpg "github.com/maximegorov13/chat-app/id/internal/user/repository/pg"
 	userservice "github.com/maximegorov13/chat-app/id/internal/user/service"
-	"log"
-	"net/http"
 )
 
 func main() {

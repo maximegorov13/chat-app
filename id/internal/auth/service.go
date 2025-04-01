@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+
 	"github.com/maximegorov13/chat-app/id/internal/user"
 )
 

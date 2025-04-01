@@ -1,8 +1,9 @@
 package req
 
 import (
-	"github.com/maximegorov13/chat-app/id/pkg/apperrors"
 	"net/http"
+
+	"github.com/maximegorov13/chat-app/id/internal/apperrors"
 )
 
 type Body interface {

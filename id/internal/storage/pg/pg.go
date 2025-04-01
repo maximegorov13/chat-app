@@ -2,9 +2,11 @@ package pg
 
 import (
 	"fmt"
+
 	"github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
+
 	"github.com/maximegorov13/chat-app/id/configs"
 )
 

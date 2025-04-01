@@ -1,15 +1,16 @@
 package http
 
 import (
-	"github.com/maximegorov13/chat-app/id/configs"
-	"github.com/maximegorov13/chat-app/id/internal/user"
-	"github.com/maximegorov13/chat-app/id/pkg/appcontext"
-	"github.com/maximegorov13/chat-app/id/pkg/apperrors"
-	"github.com/maximegorov13/chat-app/id/pkg/middleware"
-	"github.com/maximegorov13/chat-app/id/pkg/req"
-	"github.com/maximegorov13/chat-app/id/pkg/res"
 	"net/http"
 	"strconv"
+
+	"github.com/maximegorov13/chat-app/id/configs"
+	"github.com/maximegorov13/chat-app/id/internal/appcontext"
+	"github.com/maximegorov13/chat-app/id/internal/apperrors"
+	"github.com/maximegorov13/chat-app/id/internal/middleware"
+	"github.com/maximegorov13/chat-app/id/internal/req"
+	"github.com/maximegorov13/chat-app/id/internal/res"
+	"github.com/maximegorov13/chat-app/id/internal/user"
 )
 
 type UserHandlerDeps struct {

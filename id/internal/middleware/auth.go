@@ -1,12 +1,13 @@
 package middleware
 
 import (
-	"github.com/maximegorov13/chat-app/id/configs"
-	"github.com/maximegorov13/chat-app/id/pkg/appcontext"
-	"github.com/maximegorov13/chat-app/id/pkg/apperrors"
-	"github.com/maximegorov13/chat-app/id/pkg/jwt"
 	"net/http"
 	"strings"
+
+	"github.com/maximegorov13/chat-app/id/configs"
+	"github.com/maximegorov13/chat-app/id/internal/appcontext"
+	"github.com/maximegorov13/chat-app/id/internal/apperrors"
+	"github.com/maximegorov13/chat-app/id/pkg/jwt"
 )
 
 func Auth(next http.Handler, conf *configs.Config) http.Handler {
