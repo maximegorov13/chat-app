@@ -8,4 +8,5 @@ import (
 
 type AuthService interface {
 	Login(ctx context.Context, req *LoginRequest) (*user.User, error)
+	Logout(ctx context.Context, token string) error
 }

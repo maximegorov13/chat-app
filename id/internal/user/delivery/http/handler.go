@@ -7,6 +7,7 @@ import (
 	"github.com/maximegorov13/chat-app/id/configs"
 	"github.com/maximegorov13/chat-app/id/internal/appcontext"
 	"github.com/maximegorov13/chat-app/id/internal/apperrors"
+	"github.com/maximegorov13/chat-app/id/internal/auth"
 	"github.com/maximegorov13/chat-app/id/internal/middleware"
 	"github.com/maximegorov13/chat-app/id/internal/req"
 	"github.com/maximegorov13/chat-app/id/internal/res"
@@ -16,11 +17,13 @@ import (
 type UserHandlerDeps struct {
 	Conf        *configs.Config
 	UserService user.UserService
+	TokenRepo   auth.TokenRepository
 }
 
 type UserHandler struct {
 	conf        *configs.Config
 	userService user.UserService
+	tokenRepo   auth.TokenRepository
 }
 
 func NewUserHandler(router *http.ServeMux, deps UserHandlerDeps) {
@@ -30,7 +33,10 @@ func NewUserHandler(router *http.ServeMux, deps UserHandlerDeps) {
 	}
 
 	router.HandleFunc("POST /api/users", handler.Register())
-	router.Handle("PUT /api/users/{id}", middleware.Auth(handler.UpdateUser(), handler.conf))
+	router.Handle("PUT /api/users/{id}", middleware.Auth(handler.UpdateUser(), middleware.AuthDeps{
+		Conf:      deps.Conf,
+		TokenRepo: deps.TokenRepo,
+	}))
 }
 
 func (h *UserHandler) Register() http.HandlerFunc {
@@ -69,12 +75,14 @@ func (h *UserHandler) UpdateUser() http.HandlerFunc {
 		userId, err := strconv.ParseInt(idStr, 10, 64)
 		if err != nil {
 			apperrors.HandleError(w, apperrors.ErrBadRequest)
+			return
 		}
 
 		tokenUserIDStr := appcontext.GetContextUserId(r.Context())
 		tokenUserID, err := strconv.ParseInt(tokenUserIDStr, 10, 64)
 		if err != nil {
 			apperrors.HandleError(w, apperrors.ErrBadRequest)
+			return
 		}
 		if tokenUserID != userId {
 			apperrors.HandleError(w, apperrors.ErrForbidden)

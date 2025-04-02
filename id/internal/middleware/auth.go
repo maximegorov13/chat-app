@@ -4,13 +4,20 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/maximegorov13/chat-app/id/internal/auth"
+	"github.com/maximegorov13/chat-app/id/pkg/jwt"
+
 	"github.com/maximegorov13/chat-app/id/configs"
 	"github.com/maximegorov13/chat-app/id/internal/appcontext"
 	"github.com/maximegorov13/chat-app/id/internal/apperrors"
-	"github.com/maximegorov13/chat-app/id/pkg/jwt"
 )
 
-func Auth(next http.Handler, conf *configs.Config) http.Handler {
+type AuthDeps struct {
+	Conf      *configs.Config
+	TokenRepo auth.TokenRepository
+}
+
+func Auth(next http.Handler, deps AuthDeps) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
 		if !strings.HasPrefix(authHeader, "Bearer ") {
@@ -23,16 +30,26 @@ func Auth(next http.Handler, conf *configs.Config) http.Handler {
 			apperrors.HandleError(w, apperrors.ErrUnauthorized)
 			return
 		}
-		tokenString := tokenParts[1]
+		token := tokenParts[1]
 
-		j := jwt.New(conf.Auth.Secret)
-		valid, claims := j.ValidateToken(tokenString)
+		invalid, err := deps.TokenRepo.IsTokenInvalid(r.Context(), token)
+		if err != nil {
+			apperrors.HandleError(w, err)
+			return
+		}
+		if invalid {
+			apperrors.HandleError(w, apperrors.ErrUnauthorized)
+			return
+		}
+
+		j := jwt.New(deps.Conf.Auth.Secret)
+		valid, claims := j.ValidateToken(token)
 		if !valid {
 			apperrors.HandleError(w, apperrors.ErrUnauthorized)
 			return
 		}
 
-		if j.IsTokenExpired(tokenString) {
+		if j.IsTokenExpired(token) {
 			apperrors.HandleError(w, apperrors.ErrUnauthorized)
 			return
 		}

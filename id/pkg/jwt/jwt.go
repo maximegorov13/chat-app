@@ -15,12 +15,12 @@ type Claims struct {
 }
 
 type JWT struct {
-	Secret string
+	secret string
 }
 
 func New(secret string) *JWT {
 	return &JWT{
-		Secret: secret,
+		secret: secret,
 	}
 }
 
@@ -37,7 +37,7 @@ func (j *JWT) GenerateToken(userID int64, login, name string, expiresIn time.Dur
 
 	t := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	return t.SignedString([]byte(j.Secret))
+	return t.SignedString([]byte(j.secret))
 }
 
 func (j *JWT) ValidateToken(token string) (bool, Claims) {
@@ -47,7 +47,7 @@ func (j *JWT) ValidateToken(token string) (bool, Claims) {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
 
-		return []byte(j.Secret), nil
+		return []byte(j.secret), nil
 	})
 	if err != nil || !t.Valid {
 		return false, Claims{}

@@ -21,8 +21,8 @@ func NewUserRepository(db *pg.Postgres) *UserRepository {
 	}
 }
 
-func (repo *UserRepository) Create(ctx context.Context, user *user.User) error {
-	query, args, err := repo.db.Sb.
+func (r *UserRepository) Create(ctx context.Context, user *user.User) error {
+	query, args, err := r.db.Sb.
 		Insert("users").
 		Columns("login", "name", "password").
 		Values(user.Login, user.Name, user.Password).
@@ -32,11 +32,11 @@ func (repo *UserRepository) Create(ctx context.Context, user *user.User) error {
 		return err
 	}
 
-	return repo.db.Sqlx.QueryRowContext(ctx, query, args...).Scan(&user.ID, &user.CreatedAt, &user.UpdatedAt)
+	return r.db.Sqlx.QueryRowContext(ctx, query, args...).Scan(&user.ID, &user.CreatedAt, &user.UpdatedAt)
 }
 
-func (repo *UserRepository) FindByLogin(ctx context.Context, login string) (*user.User, error) {
-	query, args, err := repo.db.Sb.
+func (r *UserRepository) FindByLogin(ctx context.Context, login string) (*user.User, error) {
+	query, args, err := r.db.Sb.
 		Select("*").
 		From("users").
 		Where(squirrel.Eq{
@@ -48,7 +48,7 @@ func (repo *UserRepository) FindByLogin(ctx context.Context, login string) (*use
 	}
 
 	var u user.User
-	if err = repo.db.Sqlx.GetContext(ctx, &u, query, args...); err != nil {
+	if err = r.db.Sqlx.GetContext(ctx, &u, query, args...); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
 		}
@@ -58,8 +58,8 @@ func (repo *UserRepository) FindByLogin(ctx context.Context, login string) (*use
 	return &u, nil
 }
 
-func (repo *UserRepository) FindByID(ctx context.Context, id int64) (*user.User, error) {
-	query, args, err := repo.db.Sb.
+func (r *UserRepository) FindByID(ctx context.Context, id int64) (*user.User, error) {
+	query, args, err := r.db.Sb.
 		Select("*").
 		From("users").
 		Where(squirrel.Eq{
@@ -71,7 +71,7 @@ func (repo *UserRepository) FindByID(ctx context.Context, id int64) (*user.User,
 	}
 
 	var u user.User
-	if err = repo.db.Sqlx.GetContext(ctx, &u, query, args...); err != nil {
+	if err = r.db.Sqlx.GetContext(ctx, &u, query, args...); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
 		}
@@ -81,8 +81,8 @@ func (repo *UserRepository) FindByID(ctx context.Context, id int64) (*user.User,
 	return &u, nil
 }
 
-func (repo *UserRepository) Update(ctx context.Context, user *user.User) error {
-	query, args, err := repo.db.Sb.
+func (r *UserRepository) Update(ctx context.Context, user *user.User) error {
+	query, args, err := r.db.Sb.
 		Update("users").
 		SetMap(map[string]any{
 			"login":      user.Login,
@@ -99,5 +99,5 @@ func (repo *UserRepository) Update(ctx context.Context, user *user.User) error {
 		return err
 	}
 
-	return repo.db.Sqlx.QueryRowContext(ctx, query, args...).Scan(&user.ID, &user.CreatedAt, &user.UpdatedAt)
+	return r.db.Sqlx.QueryRowContext(ctx, query, args...).Scan(&user.ID, &user.CreatedAt, &user.UpdatedAt)
 }

@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"time"
 
 	"golang.org/x/crypto/bcrypt"
 
@@ -11,16 +12,19 @@ import (
 )
 
 type AuthServiceDeps struct {
-	UserRepo user.UserRepository
+	UserRepo  user.UserRepository
+	TokenRepo auth.TokenRepository
 }
 
 type AuthService struct {
-	userRepo user.UserRepository
+	userRepo  user.UserRepository
+	tokenRepo auth.TokenRepository
 }
 
 func NewAuthService(deps AuthServiceDeps) *AuthService {
 	return &AuthService{
-		userRepo: deps.UserRepo,
+		userRepo:  deps.UserRepo,
+		tokenRepo: deps.TokenRepo,
 	}
 }
 
@@ -39,4 +43,12 @@ func (s *AuthService) Login(ctx context.Context, req *auth.LoginRequest) (*user.
 	}
 
 	return existedUser, nil
+}
+
+func (s *AuthService) Logout(ctx context.Context, token string) error {
+	if token == "" {
+		return apperrors.ErrUnauthorized
+	}
+
+	return s.tokenRepo.InvalidateToken(ctx, token, time.Hour)
 }

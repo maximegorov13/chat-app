@@ -2,14 +2,16 @@ package http
 
 import (
 	"net/http"
+	"strings"
 	"time"
+
+	"github.com/maximegorov13/chat-app/id/pkg/jwt"
 
 	"github.com/maximegorov13/chat-app/id/configs"
 	"github.com/maximegorov13/chat-app/id/internal/apperrors"
 	"github.com/maximegorov13/chat-app/id/internal/auth"
 	"github.com/maximegorov13/chat-app/id/internal/req"
 	"github.com/maximegorov13/chat-app/id/internal/res"
-	"github.com/maximegorov13/chat-app/id/pkg/jwt"
 )
 
 type AuthHandlerDeps struct {
@@ -29,6 +31,7 @@ func NewAuthHandler(router *http.ServeMux, deps AuthHandlerDeps) {
 	}
 
 	router.HandleFunc("POST /api/auth/login", handler.Login())
+	router.HandleFunc("POST /api/auth/logout", handler.Logout())
 }
 
 func (h *AuthHandler) Login() http.HandlerFunc {
@@ -56,5 +59,30 @@ func (h *AuthHandler) Login() http.HandlerFunc {
 		}
 
 		res.Json(w, data, http.StatusOK)
+	}
+}
+
+func (h *AuthHandler) Logout() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		authHeader := r.Header.Get("Authorization")
+		if !strings.HasPrefix(authHeader, "Bearer ") {
+			apperrors.HandleError(w, apperrors.ErrUnauthorized)
+			return
+		}
+
+		tokenParts := strings.Split(authHeader, " ")
+		if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
+			apperrors.HandleError(w, apperrors.ErrUnauthorized)
+			return
+		}
+		token := tokenParts[1]
+
+		err := h.authService.Logout(r.Context(), token)
+		if err != nil {
+			apperrors.HandleError(w, err)
+			return
+		}
+
+		res.Json(w, "Successfully logged out", http.StatusOK)
 	}
 }

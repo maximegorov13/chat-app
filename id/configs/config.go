@@ -10,6 +10,7 @@ import (
 type Config struct {
 	Server   ServerConfig
 	Postgres PostgresConfig
+	Redis    RedisConfig
 	Auth     AuthConfig
 }
 
@@ -18,6 +19,10 @@ type ServerConfig struct {
 }
 
 type PostgresConfig struct {
+	Url string
+}
+
+type RedisConfig struct {
 	Url string
 }
 
@@ -36,6 +41,9 @@ func Load() (*Config, error) {
 		},
 		Postgres: PostgresConfig{
 			Url: os.Getenv("POSTGRES_URL"),
+		},
+		Redis: RedisConfig{
+			Url: os.Getenv("REDIS_URL"),
 		},
 		Auth: AuthConfig{
 			Secret: os.Getenv("SECRET"),
