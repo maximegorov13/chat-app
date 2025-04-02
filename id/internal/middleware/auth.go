@@ -4,17 +4,18 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/maximegorov13/chat-app/id/internal/auth"
 	"github.com/maximegorov13/chat-app/id/pkg/jwt"
 
 	"github.com/maximegorov13/chat-app/id/configs"
 	"github.com/maximegorov13/chat-app/id/internal/appcontext"
 	"github.com/maximegorov13/chat-app/id/internal/apperrors"
+	"github.com/maximegorov13/chat-app/id/internal/auth"
 )
 
 type AuthDeps struct {
 	Conf      *configs.Config
 	TokenRepo auth.TokenRepository
+	JWT       *jwt.JWT
 }
 
 func Auth(next http.Handler, deps AuthDeps) http.Handler {
@@ -42,14 +43,13 @@ func Auth(next http.Handler, deps AuthDeps) http.Handler {
 			return
 		}
 
-		j := jwt.New(deps.Conf.Auth.Secret)
-		valid, claims := j.ValidateToken(token)
+		valid, claims := deps.JWT.ValidateToken(token)
 		if !valid {
 			apperrors.HandleError(w, apperrors.ErrUnauthorized)
 			return
 		}
 
-		if j.IsTokenExpired(token) {
+		if deps.JWT.IsTokenExpired(token) {
 			apperrors.HandleError(w, apperrors.ErrUnauthorized)
 			return
 		}

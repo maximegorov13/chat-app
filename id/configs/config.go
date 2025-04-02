@@ -27,7 +27,8 @@ type RedisConfig struct {
 }
 
 type AuthConfig struct {
-	Secret string
+	SecretKeysPath string
+	PostfixKeyAuth string
 }
 
 func Load() (*Config, error) {
@@ -46,7 +47,8 @@ func Load() (*Config, error) {
 			Url: os.Getenv("REDIS_URL"),
 		},
 		Auth: AuthConfig{
-			Secret: os.Getenv("SECRET"),
+			SecretKeysPath: os.Getenv("SECRET_KEYS_PATH"),
+			PostfixKeyAuth: os.Getenv("POSTFIX_KEY_AUTH"),
 		},
 	}, nil
 }

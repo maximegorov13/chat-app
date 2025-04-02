@@ -6,10 +6,13 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/maximegorov13/chat-app/id/pkg/jwt"
+
 	"github.com/maximegorov13/chat-app/id/configs"
 	authhttp "github.com/maximegorov13/chat-app/id/internal/auth/delivery/http"
 	authredis "github.com/maximegorov13/chat-app/id/internal/auth/repository/redis"
 	authservice "github.com/maximegorov13/chat-app/id/internal/auth/service"
+	"github.com/maximegorov13/chat-app/id/internal/keyreader"
 	"github.com/maximegorov13/chat-app/id/internal/storage/pg"
 	"github.com/maximegorov13/chat-app/id/internal/storage/redis"
 	userhttp "github.com/maximegorov13/chat-app/id/internal/user/delivery/http"
@@ -23,7 +26,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	pgClient, err := pg.New(conf)
+	pgClient, err := pg.NewPostgres(conf)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -33,7 +36,7 @@ func main() {
 		}
 	}()
 
-	redisClient, err := redis.New(context.Background(), conf)
+	redisClient, err := redis.NewRedis(context.Background(), conf)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -42,6 +45,18 @@ func main() {
 			log.Printf("Error when closing the Redis connection: %v\n", err)
 		}
 	}()
+
+	keyReader := keyreader.NewKeyReader(conf.Auth.SecretKeysPath)
+	privateKey, err := keyReader.ReadPrivateKey(conf.Auth.PostfixKeyAuth)
+	if err != nil {
+		log.Fatal(err)
+	}
+	publicKey, err := keyReader.ReadPublicKey(conf.Auth.PostfixKeyAuth)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	jwtMaker := jwt.NewJWT(privateKey, publicKey)
 
 	// Repositories
 	userRepo := userpg.NewUserRepository(pgClient)
@@ -54,6 +69,7 @@ func main() {
 	authService := authservice.NewAuthService(authservice.AuthServiceDeps{
 		UserRepo:  userRepo,
 		TokenRepo: tokenRepo,
+		JWT:       jwtMaker,
 	})
 
 	router := http.NewServeMux()
@@ -63,6 +79,7 @@ func main() {
 		Conf:        conf,
 		UserService: userService,
 		TokenRepo:   tokenRepo,
+		JWT:         jwtMaker,
 	})
 	authhttp.NewAuthHandler(router, authhttp.AuthHandlerDeps{
 		Conf:        conf,

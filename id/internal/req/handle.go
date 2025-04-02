@@ -17,7 +17,7 @@ func HandleBody[T Body](r *http.Request) (*T, error) {
 	}
 
 	if err = body.Validate(); err != nil {
-		return nil, apperrors.New(err, apperrors.ErrValidationFailed.Code, apperrors.ErrValidationFailed.Message)
+		return nil, apperrors.NewError(err, apperrors.ErrValidationFailed.Code, apperrors.ErrValidationFailed.Message)
 	}
 
 	return &body, nil

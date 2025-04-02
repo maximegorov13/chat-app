@@ -12,18 +12,19 @@ import (
 	"github.com/maximegorov13/chat-app/id/internal/req"
 	"github.com/maximegorov13/chat-app/id/internal/res"
 	"github.com/maximegorov13/chat-app/id/internal/user"
+	"github.com/maximegorov13/chat-app/id/pkg/jwt"
 )
 
 type UserHandlerDeps struct {
 	Conf        *configs.Config
 	UserService user.UserService
 	TokenRepo   auth.TokenRepository
+	JWT         *jwt.JWT
 }
 
 type UserHandler struct {
 	conf        *configs.Config
 	userService user.UserService
-	tokenRepo   auth.TokenRepository
 }
 
 func NewUserHandler(router *http.ServeMux, deps UserHandlerDeps) {
@@ -36,6 +37,7 @@ func NewUserHandler(router *http.ServeMux, deps UserHandlerDeps) {
 	router.Handle("PUT /api/users/{id}", middleware.Auth(handler.UpdateUser(), middleware.AuthDeps{
 		Conf:      deps.Conf,
 		TokenRepo: deps.TokenRepo,
+		JWT:       deps.JWT,
 	}))
 }
 

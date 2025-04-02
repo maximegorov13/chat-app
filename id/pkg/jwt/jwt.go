@@ -15,16 +15,23 @@ type Claims struct {
 }
 
 type JWT struct {
-	secret string
+	privateKey []byte
+	publicKey  []byte
 }
 
-func New(secret string) *JWT {
+func NewJWT(privateKey, publicKey []byte) *JWT {
 	return &JWT{
-		secret: secret,
+		privateKey: privateKey,
+		publicKey:  publicKey,
 	}
 }
 
 func (j *JWT) GenerateToken(userID int64, login, name string, expiresIn time.Duration) (string, error) {
+	key, err := jwt.ParseRSAPrivateKeyFromPEM(j.privateKey)
+	if err != nil {
+		return "", fmt.Errorf("generate: parse key: %w", err)
+	}
+
 	claims := Claims{
 		Login: login,
 		Name:  name,
@@ -35,23 +42,34 @@ func (j *JWT) GenerateToken(userID int64, login, name string, expiresIn time.Dur
 		},
 	}
 
-	t := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	token, err := jwt.NewWithClaims(jwt.SigningMethodRS256, claims).SignedString(key)
+	if err != nil {
+		return "", fmt.Errorf("create: sign token: %w", err)
+	}
 
-	return t.SignedString([]byte(j.secret))
+	return token, nil
 }
 
 func (j *JWT) ValidateToken(token string) (bool, Claims) {
+	key, err := jwt.ParseRSAPublicKeyFromPEM(j.publicKey)
+	if err != nil {
+		return false, Claims{}
+	}
+
 	claims := Claims{}
-	t, err := jwt.ParseWithClaims(token, &claims, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+
+	t, err := jwt.ParseWithClaims(token, &claims, func(jwtToken *jwt.Token) (interface{}, error) {
+		if _, ok := jwtToken.Method.(*jwt.SigningMethodRSA); !ok {
+			return nil, fmt.Errorf("unexpected method: %s", jwtToken.Header["alg"])
 		}
 
-		return []byte(j.secret), nil
+		return key, nil
 	})
 	if err != nil || !t.Valid {
 		return false, Claims{}
 	}
+
+	fmt.Println(claims)
 
 	return true, claims
 }
@@ -61,7 +79,6 @@ func (j *JWT) ExtractUserID(token string) (string, error) {
 	if !valid {
 		return "", fmt.Errorf("invalid token")
 	}
-
 	if claims.Subject == "" {
 		return "", fmt.Errorf("token does not contain subject (sub)")
 	}

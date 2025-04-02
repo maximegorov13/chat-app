@@ -3,9 +3,6 @@ package http
 import (
 	"net/http"
 	"strings"
-	"time"
-
-	"github.com/maximegorov13/chat-app/id/pkg/jwt"
 
 	"github.com/maximegorov13/chat-app/id/configs"
 	"github.com/maximegorov13/chat-app/id/internal/apperrors"
@@ -42,20 +39,14 @@ func (h *AuthHandler) Login() http.HandlerFunc {
 			return
 		}
 
-		u, err := h.authService.Login(r.Context(), body)
-		if err != nil {
-			apperrors.HandleError(w, err)
-			return
-		}
-
-		t, err := jwt.New(h.conf.Auth.Secret).GenerateToken(u.ID, u.Login, u.Name, time.Hour)
+		token, err := h.authService.Login(r.Context(), body)
 		if err != nil {
 			apperrors.HandleError(w, err)
 			return
 		}
 
 		data := auth.LoginResponse{
-			Token: t,
+			Token: token,
 		}
 
 		res.Json(w, data, http.StatusOK)

@@ -18,7 +18,7 @@ func (e *Error) Error() string {
 	return e.Message
 }
 
-func New(err error, code int, message string) *Error {
+func NewError(err error, code int, message string) *Error {
 	return &Error{
 		Code:    code,
 		Message: message,
@@ -27,18 +27,18 @@ func New(err error, code int, message string) *Error {
 }
 
 var (
-	ErrBadRequest         = New(nil, http.StatusBadRequest, "bad request")
-	ErrInvalidRequestBody = New(nil, http.StatusBadRequest, "invalid request body")
-	ErrValidationFailed   = New(nil, http.StatusBadRequest, "validation failed")
+	ErrBadRequest         = NewError(nil, http.StatusBadRequest, "bad request")
+	ErrInvalidRequestBody = NewError(nil, http.StatusBadRequest, "invalid request body")
+	ErrValidationFailed   = NewError(nil, http.StatusBadRequest, "validation failed")
 
-	ErrUnauthorized       = New(nil, http.StatusUnauthorized, "unauthorized")
-	ErrInvalidCredentials = New(nil, http.StatusUnauthorized, "invalid credentials")
+	ErrUnauthorized       = NewError(nil, http.StatusUnauthorized, "unauthorized")
+	ErrInvalidCredentials = NewError(nil, http.StatusUnauthorized, "invalid credentials")
 
-	ErrForbidden = New(nil, http.StatusForbidden, "forbidden")
+	ErrForbidden = NewError(nil, http.StatusForbidden, "forbidden")
 
-	ErrNotFound = New(nil, http.StatusNotFound, "not found")
+	ErrNotFound = NewError(nil, http.StatusNotFound, "not found")
 
-	ErrUserExists = New(nil, http.StatusConflict, "user already exists")
+	ErrUserExists = NewError(nil, http.StatusConflict, "user already exists")
 
-	ErrInternalServerError = New(nil, http.StatusInternalServerError, "internal server error")
+	ErrInternalServerError = NewError(nil, http.StatusInternalServerError, "internal server error")
 )

@@ -14,7 +14,7 @@ type Redis struct {
 	client *redis.Client
 }
 
-func New(ctx context.Context, conf *configs.Config) (*Redis, error) {
+func NewRedis(ctx context.Context, conf *configs.Config) (*Redis, error) {
 	opts, err := redis.ParseURL(conf.Redis.Url)
 	if err != nil {
 		return nil, err

@@ -15,7 +15,7 @@ type Postgres struct {
 	Sb   squirrel.StatementBuilderType
 }
 
-func New(conf *configs.Config) (*Postgres, error) {
+func NewPostgres(conf *configs.Config) (*Postgres, error) {
 	db, err := sqlx.Connect("postgres", conf.Postgres.Url)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to database: %w", err)
