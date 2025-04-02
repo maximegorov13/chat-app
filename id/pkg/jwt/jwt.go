@@ -69,8 +69,6 @@ func (j *JWT) ValidateToken(token string) (bool, Claims) {
 		return false, Claims{}
 	}
 
-	fmt.Println(claims)
-
 	return true, claims
 }
 

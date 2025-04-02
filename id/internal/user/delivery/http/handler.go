@@ -4,15 +4,15 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/maximegorov13/chat-app/id/pkg/jwt"
+
 	"github.com/maximegorov13/chat-app/id/configs"
 	"github.com/maximegorov13/chat-app/id/internal/appcontext"
-	"github.com/maximegorov13/chat-app/id/internal/apperrors"
 	"github.com/maximegorov13/chat-app/id/internal/auth"
 	"github.com/maximegorov13/chat-app/id/internal/middleware"
 	"github.com/maximegorov13/chat-app/id/internal/req"
 	"github.com/maximegorov13/chat-app/id/internal/res"
 	"github.com/maximegorov13/chat-app/id/internal/user"
-	"github.com/maximegorov13/chat-app/id/pkg/jwt"
 )
 
 type UserHandlerDeps struct {
@@ -45,13 +45,13 @@ func (h *UserHandler) Register() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		body, err := req.HandleBody[user.RegisterRequest](r)
 		if err != nil {
-			apperrors.HandleError(w, err)
+			res.Error(w, err)
 			return
 		}
 
-		u, err := h.userService.Register(r.Context(), body)
+		u, err := h.userService.Register(r.Context(), &body.Data)
 		if err != nil {
-			apperrors.HandleError(w, err)
+			res.Error(w, err)
 			return
 		}
 
@@ -61,7 +61,7 @@ func (h *UserHandler) Register() http.HandlerFunc {
 			Name:  u.Name,
 		}
 
-		res.Json(w, data, http.StatusCreated)
+		res.JSON(w, http.StatusCreated, data, res.Meta{})
 	}
 }
 
@@ -69,31 +69,31 @@ func (h *UserHandler) UpdateUser() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		body, err := req.HandleBody[user.UpdateUserRequest](r)
 		if err != nil {
-			apperrors.HandleError(w, err)
+			res.Error(w, err)
 			return
 		}
 
 		idStr := r.PathValue("id")
 		userId, err := strconv.ParseInt(idStr, 10, 64)
 		if err != nil {
-			apperrors.HandleError(w, apperrors.ErrBadRequest)
+			res.Error(w, err)
 			return
 		}
 
 		tokenUserIDStr := appcontext.GetContextUserId(r.Context())
 		tokenUserID, err := strconv.ParseInt(tokenUserIDStr, 10, 64)
 		if err != nil {
-			apperrors.HandleError(w, apperrors.ErrBadRequest)
+			res.Error(w, err)
 			return
 		}
 		if tokenUserID != userId {
-			apperrors.HandleError(w, apperrors.ErrForbidden)
+			res.Error(w, err)
 			return
 		}
 
-		u, err := h.userService.UpdateUser(r.Context(), tokenUserID, body)
+		u, err := h.userService.UpdateUser(r.Context(), tokenUserID, &body.Data)
 		if err != nil {
-			apperrors.HandleError(w, err)
+			res.Error(w, err)
 			return
 		}
 
@@ -103,6 +103,6 @@ func (h *UserHandler) UpdateUser() http.HandlerFunc {
 			Name:  u.Name,
 		}
 
-		res.Json(w, data, http.StatusOK)
+		res.JSON(w, http.StatusOK, data, res.Meta{})
 	}
 }

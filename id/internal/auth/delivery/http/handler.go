@@ -35,13 +35,13 @@ func (h *AuthHandler) Login() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		body, err := req.HandleBody[auth.LoginRequest](r)
 		if err != nil {
-			apperrors.HandleError(w, err)
+			res.Error(w, err)
 			return
 		}
 
-		token, err := h.authService.Login(r.Context(), body)
+		token, err := h.authService.Login(r.Context(), &body.Data)
 		if err != nil {
-			apperrors.HandleError(w, err)
+			res.Error(w, err)
 			return
 		}
 
@@ -49,7 +49,7 @@ func (h *AuthHandler) Login() http.HandlerFunc {
 			Token: token,
 		}
 
-		res.Json(w, data, http.StatusOK)
+		res.JSON(w, http.StatusOK, data, res.Meta{})
 	}
 }
 
@@ -57,23 +57,23 @@ func (h *AuthHandler) Logout() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
 		if !strings.HasPrefix(authHeader, "Bearer ") {
-			apperrors.HandleError(w, apperrors.ErrUnauthorized)
+			res.Error(w, apperrors.ErrUnauthorized)
 			return
 		}
 
 		tokenParts := strings.Split(authHeader, " ")
 		if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
-			apperrors.HandleError(w, apperrors.ErrUnauthorized)
+			res.Error(w, apperrors.ErrUnauthorized)
 			return
 		}
 		token := tokenParts[1]
 
 		err := h.authService.Logout(r.Context(), token)
 		if err != nil {
-			apperrors.HandleError(w, err)
+			res.Error(w, err)
 			return
 		}
 
-		res.Json(w, "Successfully logged out", http.StatusOK)
+		res.JSON(w, http.StatusOK, "Successfully logged out", res.Meta{})
 	}
 }
