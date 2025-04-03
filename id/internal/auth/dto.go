@@ -1,6 +1,6 @@
 package auth
 
-import validation "github.com/go-ozzo/ozzo-validation"
+import "github.com/go-ozzo/ozzo-validation"
 
 type LoginRequest struct {
 	Login    string `json:"login"`

@@ -49,7 +49,7 @@ func (h *AuthHandler) Login() http.HandlerFunc {
 			Token: token,
 		}
 
-		res.JSON(w, http.StatusOK, data, res.Meta{})
+		res.JSON(w, http.StatusOK, data, res.ResponseMeta{})
 	}
 }
 
@@ -74,6 +74,6 @@ func (h *AuthHandler) Logout() http.HandlerFunc {
 			return
 		}
 
-		res.JSON(w, http.StatusOK, "Successfully logged out", res.Meta{})
+		res.JSON(w, http.StatusOK, "Successfully logged out", res.ResponseMeta{})
 	}
 }

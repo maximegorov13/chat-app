@@ -5,8 +5,8 @@ type Body interface {
 }
 
 type Request[T any] struct {
-	Meta *Meta `json:"meta,omitempty"`
-	Data T     `json:"data"`
+	Meta *RequestMeta `json:"meta,omitempty"`
+	Data T            `json:"data"`
 }
 
-type Meta struct{}
+type RequestMeta struct{}

@@ -8,6 +8,7 @@ import (
 
 	"github.com/maximegorov13/chat-app/id/configs"
 	"github.com/maximegorov13/chat-app/id/internal/appcontext"
+	"github.com/maximegorov13/chat-app/id/internal/apperrors"
 	"github.com/maximegorov13/chat-app/id/internal/auth"
 	"github.com/maximegorov13/chat-app/id/internal/middleware"
 	"github.com/maximegorov13/chat-app/id/internal/req"
@@ -61,7 +62,7 @@ func (h *UserHandler) Register() http.HandlerFunc {
 			Name:  u.Name,
 		}
 
-		res.JSON(w, http.StatusCreated, data, res.Meta{})
+		res.JSON(w, http.StatusCreated, data, res.ResponseMeta{})
 	}
 }
 
@@ -76,18 +77,18 @@ func (h *UserHandler) UpdateUser() http.HandlerFunc {
 		idStr := r.PathValue("id")
 		userId, err := strconv.ParseInt(idStr, 10, 64)
 		if err != nil {
-			res.Error(w, err)
+			res.Error(w, apperrors.ErrBadRequest)
 			return
 		}
 
 		tokenUserIDStr := appcontext.GetContextUserId(r.Context())
 		tokenUserID, err := strconv.ParseInt(tokenUserIDStr, 10, 64)
 		if err != nil {
-			res.Error(w, err)
+			res.Error(w, apperrors.ErrBadRequest)
 			return
 		}
 		if tokenUserID != userId {
-			res.Error(w, err)
+			res.Error(w, apperrors.ErrForbidden)
 			return
 		}
 
@@ -103,6 +104,6 @@ func (h *UserHandler) UpdateUser() http.HandlerFunc {
 			Name:  u.Name,
 		}
 
-		res.JSON(w, http.StatusOK, data, res.Meta{})
+		res.JSON(w, http.StatusOK, data, res.ResponseMeta{})
 	}
 }

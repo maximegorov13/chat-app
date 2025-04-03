@@ -1,14 +1,20 @@
 package res
 
 type Response struct {
-	Meta  Meta          `json:"meta"`
-	Data  any           `json:"data,omitempty"`
-	Error *ErrorDetails `json:"error,omitempty"`
+	Meta  ResponseMeta   `json:"meta"`
+	Data  any            `json:"data,omitempty"`
+	Error *ErrorResponse `json:"error,omitempty"`
 }
 
-type Meta struct{}
+type ResponseMeta struct{}
 
-type ErrorDetails struct {
-	Code    int    `json:"code"`
+type ErrorResponse struct {
+	Code    int           `json:"code"`
+	Message string        `json:"message"`
+	Details []ErrorDetail `json:"details,omitempty"`
+}
+
+type ErrorDetail struct {
+	Field   string `json:"field"`
 	Message string `json:"message"`
 }
