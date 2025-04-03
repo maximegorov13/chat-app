@@ -18,10 +18,10 @@ type Postgres struct {
 func NewPostgres(conf *configs.Config) (*Postgres, error) {
 	db, err := sqlx.Connect("postgres", conf.Postgres.Url)
 	if err != nil {
-		return nil, fmt.Errorf("failed to connect to database: %w", err)
+		return nil, fmt.Errorf("failed to connect to postgres: %w", err)
 	}
 	if err = db.Ping(); err != nil {
-		return nil, fmt.Errorf("failed to ping database: %w", err)
+		return nil, fmt.Errorf("failed to ping postgres: %w", err)
 	}
 
 	builder := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)

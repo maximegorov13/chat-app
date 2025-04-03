@@ -9,3 +9,18 @@ migrate-up:
 
 migrate-down:
 	migrate -path migrations/pg -database $(POSTGRES_URL) down
+
+lint:
+	golangci-lint run
+
+lint-fix:
+	golangci-lint run --fix
+
+run:
+	go run cmd/main.go
+
+test:
+	go test -v ./...
+
+compose-up:
+	docker compose up -d --build

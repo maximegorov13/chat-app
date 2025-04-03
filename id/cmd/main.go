@@ -36,7 +36,7 @@ func main() {
 		log.Fatal(err)
 	}
 	defer func() {
-		if err := pgClient.Sqlx.DB.Close(); err != nil {
+		if err := pgClient.Sqlx.Close(); err != nil {
 			log.Printf("Error when closing the Postgres connection: %v\n", err)
 		}
 	}()
@@ -97,7 +97,7 @@ func main() {
 	}
 
 	go func() {
-		log.Printf("Starting server on port %v\n", conf.Server.Port)
+		log.Printf("Starting server on port %v", conf.Server.Port)
 		if err = server.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 			log.Fatalf("HTTP server error: %v", err)
 		}
