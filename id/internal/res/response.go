@@ -10,9 +10,15 @@ import (
 	"github.com/maximegorov13/chat-app/id/internal/apperrors"
 )
 
-func JSON(w http.ResponseWriter, statusCode int, data any, meta ResponseMeta) {
+func JSON(w http.ResponseWriter, statusCode int, data any, meta *ResponseMeta) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
+	if data == nil {
+		data = map[string]any{}
+	}
+	if meta == nil {
+		meta = &ResponseMeta{}
+	}
 	json.NewEncoder(w).Encode(Response{
 		Data: data,
 		Meta: meta,

@@ -1,8 +1,8 @@
 package res
 
 type Response struct {
-	Meta  ResponseMeta   `json:"meta"`
-	Data  any            `json:"data,omitempty"`
+	Meta  *ResponseMeta  `json:"meta"`
+	Data  any            `json:"data"`
 	Error *ErrorResponse `json:"error,omitempty"`
 }
 

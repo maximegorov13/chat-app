@@ -62,7 +62,7 @@ func (h *UserHandler) Register() http.HandlerFunc {
 			Name:  u.Name,
 		}
 
-		res.JSON(w, http.StatusCreated, data, res.ResponseMeta{})
+		res.JSON(w, http.StatusCreated, data, nil)
 	}
 }
 
@@ -104,6 +104,6 @@ func (h *UserHandler) UpdateUser() http.HandlerFunc {
 			Name:  u.Name,
 		}
 
-		res.JSON(w, http.StatusOK, data, res.ResponseMeta{})
+		res.JSON(w, http.StatusOK, data, nil)
 	}
 }
