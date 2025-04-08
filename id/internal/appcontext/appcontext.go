@@ -5,13 +5,13 @@ import "context"
 type contextKey string
 
 const (
-	contextUserIdKey contextKey = "ContextUserIdKey"
+	contextUserIDKey contextKey = "ContextUserIDKey"
 )
 
-func SetContextUserId(ctx context.Context, userId string) context.Context {
-	return context.WithValue(ctx, contextUserIdKey, userId)
+func SetContextUserID(ctx context.Context, userId string) context.Context {
+	return context.WithValue(ctx, contextUserIDKey, userId)
 }
 
-func GetContextUserId(ctx context.Context) string {
-	return ctx.Value(contextUserIdKey).(string)
+func GetContextUserID(ctx context.Context) string {
+	return ctx.Value(contextUserIDKey).(string)
 }

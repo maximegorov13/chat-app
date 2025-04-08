@@ -51,7 +51,7 @@ func (s *UserService) Register(ctx context.Context, req *user.RegisterRequest) (
 }
 
 func (s *UserService) UpdateUser(ctx context.Context, userID int64, req *user.UpdateUserRequest) (*user.User, error) {
-	existedUser, err := s.userRepo.FindByLogin(ctx, req.Login)
+	existedUser, err := s.userRepo.FindByID(ctx, userID)
 	if err != nil {
 		return nil, err
 	}

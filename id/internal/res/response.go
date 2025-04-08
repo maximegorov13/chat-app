@@ -46,6 +46,8 @@ func Error(w http.ResponseWriter, err error) {
 func sendAppError(w http.ResponseWriter, err *apperrors.Error) {
 	w.WriteHeader(err.Code)
 	json.NewEncoder(w).Encode(Response{
+		Meta: &ResponseMeta{},
+		Data: map[string]any{},
 		Error: &ErrorResponse{
 			Code:    err.Code,
 			Message: err.Message,
@@ -65,6 +67,8 @@ func sendValidateError(w http.ResponseWriter, errs validation.Errors) {
 	}
 
 	json.NewEncoder(w).Encode(Response{
+		Meta: &ResponseMeta{},
+		Data: map[string]any{},
 		Error: &ErrorResponse{
 			Code:    apperrors.ErrValidationFailed.Code,
 			Message: apperrors.ErrValidationFailed.Message,
@@ -76,6 +80,8 @@ func sendValidateError(w http.ResponseWriter, errs validation.Errors) {
 func sendDefaultError(w http.ResponseWriter) {
 	w.WriteHeader(apperrors.ErrInternalServerError.Code)
 	json.NewEncoder(w).Encode(Response{
+		Meta: &ResponseMeta{},
+		Data: map[string]any{},
 		Error: &ErrorResponse{
 			Code:    apperrors.ErrInternalServerError.Code,
 			Message: apperrors.ErrInternalServerError.Message,

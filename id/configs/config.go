@@ -67,9 +67,15 @@ func (a AuthConfig) Validate() error {
 	)
 }
 
-func Load() (*Config, error) {
-	if err := godotenv.Load(); err != nil {
-		return nil, fmt.Errorf("error loading .env file: %w", err)
+func Load(envPath ...string) (*Config, error) {
+	if len(envPath) > 0 {
+		if err := godotenv.Load(envPath[0]); err != nil {
+			return nil, fmt.Errorf("error loading .env file at %s: %w", envPath[0], err)
+		}
+	} else {
+		if err := godotenv.Load(); err != nil {
+			return nil, fmt.Errorf("error loading .env file: %w", err)
+		}
 	}
 
 	conf := &Config{

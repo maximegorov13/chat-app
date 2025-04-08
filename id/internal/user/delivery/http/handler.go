@@ -7,7 +7,6 @@ import (
 	"github.com/maximegorov13/chat-app/id/pkg/jwt"
 
 	"github.com/maximegorov13/chat-app/id/configs"
-	"github.com/maximegorov13/chat-app/id/internal/appcontext"
 	"github.com/maximegorov13/chat-app/id/internal/apperrors"
 	"github.com/maximegorov13/chat-app/id/internal/auth"
 	"github.com/maximegorov13/chat-app/id/internal/middleware"
@@ -35,7 +34,7 @@ func NewUserHandler(router *http.ServeMux, deps UserHandlerDeps) {
 	}
 
 	router.HandleFunc("POST /api/users", handler.Register())
-	router.Handle("PUT /api/users/{id}", middleware.Auth(handler.UpdateUser(), middleware.AuthDeps{
+	router.Handle("PUT /api/users/{id}", middleware.Auth(middleware.CheckUserAccessByID(handler.UpdateUser()), middleware.AuthDeps{
 		Conf:      deps.Conf,
 		TokenRepo: deps.TokenRepo,
 		JWT:       deps.JWT,
@@ -75,24 +74,13 @@ func (h *UserHandler) UpdateUser() http.HandlerFunc {
 		}
 
 		idStr := r.PathValue("id")
-		userId, err := strconv.ParseInt(idStr, 10, 64)
+		userID, err := strconv.ParseInt(idStr, 10, 64)
 		if err != nil {
 			res.Error(w, apperrors.ErrBadRequest)
 			return
 		}
 
-		tokenUserIDStr := appcontext.GetContextUserId(r.Context())
-		tokenUserID, err := strconv.ParseInt(tokenUserIDStr, 10, 64)
-		if err != nil {
-			res.Error(w, apperrors.ErrBadRequest)
-			return
-		}
-		if tokenUserID != userId {
-			res.Error(w, apperrors.ErrForbidden)
-			return
-		}
-
-		u, err := h.userService.UpdateUser(r.Context(), tokenUserID, &body.Data)
+		u, err := h.userService.UpdateUser(r.Context(), userID, &body.Data)
 		if err != nil {
 			res.Error(w, err)
 			return

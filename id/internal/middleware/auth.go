@@ -55,7 +55,7 @@ func Auth(next http.Handler, deps AuthDeps) http.Handler {
 			return
 		}
 
-		ctx := appcontext.SetContextUserId(r.Context(), claims.Subject)
+		ctx := appcontext.SetContextUserID(r.Context(), claims.Subject)
 		r = r.WithContext(ctx)
 
 		next.ServeHTTP(w, r)
