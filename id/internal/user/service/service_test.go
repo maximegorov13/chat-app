@@ -28,7 +28,7 @@ func setupTest(t *testing.T) (user.UserService, user.UserRepository, func(userID
 		UserRepo: userRepo,
 	})
 
-	cleanup := func(userID int64) {
+	cleanupUser := func(userID int64) {
 		query, args, err := pgClient.Sb.
 			Delete("users").
 			Where(squirrel.Eq{
@@ -45,11 +45,11 @@ func setupTest(t *testing.T) (user.UserService, user.UserRepository, func(userID
 		}
 	}
 
-	return userService, userRepo, cleanup
+	return userService, userRepo, cleanupUser
 }
 
 func TestUserService_Register(t *testing.T) {
-	userService, repo, cleanup := setupTest(t)
+	userService, repo, cleanupUser := setupTest(t)
 
 	ctx := context.Background()
 
@@ -62,7 +62,7 @@ func TestUserService_Register(t *testing.T) {
 
 		u, err := userService.Register(ctx, registerReq)
 		t.Cleanup(func() {
-			cleanup(u.ID)
+			cleanupUser(u.ID)
 		})
 		require.NoError(t, err)
 		require.NotNil(t, u)
@@ -91,7 +91,7 @@ func TestUserService_Register(t *testing.T) {
 
 		u, err := userService.Register(ctx, registerReq)
 		t.Cleanup(func() {
-			cleanup(u.ID)
+			cleanupUser(u.ID)
 		})
 		require.NoError(t, err)
 
@@ -102,7 +102,7 @@ func TestUserService_Register(t *testing.T) {
 }
 
 func TestUserService_UpdateUser(t *testing.T) {
-	userService, _, cleanup := setupTest(t)
+	userService, _, cleanupUser := setupTest(t)
 
 	ctx := context.Background()
 
@@ -115,7 +115,7 @@ func TestUserService_UpdateUser(t *testing.T) {
 
 		registeredUser, err := userService.Register(ctx, registerReq)
 		t.Cleanup(func() {
-			cleanup(registeredUser.ID)
+			cleanupUser(registeredUser.ID)
 		})
 		require.NoError(t, err)
 

@@ -8,7 +8,6 @@ import (
 	"github.com/Masterminds/squirrel"
 	"github.com/stretchr/testify/require"
 
-	"github.com/maximegorov13/chat-app/id/internal/rediskeys"
 	"github.com/maximegorov13/chat-app/id/pkg/jwt"
 
 	"github.com/maximegorov13/chat-app/id/configs"
@@ -17,6 +16,7 @@ import (
 	authredis "github.com/maximegorov13/chat-app/id/internal/auth/repository/redis"
 	authservice "github.com/maximegorov13/chat-app/id/internal/auth/service"
 	"github.com/maximegorov13/chat-app/id/internal/keyreader"
+	"github.com/maximegorov13/chat-app/id/internal/rediskeys"
 	"github.com/maximegorov13/chat-app/id/internal/storage/pg"
 	"github.com/maximegorov13/chat-app/id/internal/storage/redis"
 	"github.com/maximegorov13/chat-app/id/internal/user"
