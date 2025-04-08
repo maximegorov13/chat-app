@@ -24,7 +24,9 @@ import (
 	userservice "github.com/maximegorov13/chat-app/id/internal/user/service"
 )
 
-func setupTest(t *testing.T) (auth.AuthService, user.UserService, auth.TokenRepository, func(userID int64), func(token string)) {
+func setupTest(t testing.TB) (auth.AuthService, user.UserService, auth.TokenRepository, func(userID int64), func(token string)) {
+	t.Helper()
+
 	conf, err := configs.Load("../../../.env")
 	require.NoError(t, err)
 
