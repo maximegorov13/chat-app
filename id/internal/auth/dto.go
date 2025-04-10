@@ -17,3 +17,7 @@ func (r LoginRequest) Validate() error {
 type LoginResponse struct {
 	Token string `json:"token"`
 }
+
+type IsTokenInvalidResponse struct {
+	Invalid bool `json:"invalid"`
+}

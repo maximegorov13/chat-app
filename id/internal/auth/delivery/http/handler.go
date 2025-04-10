@@ -29,6 +29,7 @@ func NewAuthHandler(router *http.ServeMux, deps AuthHandlerDeps) {
 
 	router.HandleFunc("POST /api/auth/login", handler.Login())
 	router.HandleFunc("POST /api/auth/logout", handler.Logout())
+	router.HandleFunc("GET /api/auth/is-token-invalid", handler.IsTokenInvalid())
 }
 
 func (h *AuthHandler) Login() http.HandlerFunc {
@@ -75,5 +76,28 @@ func (h *AuthHandler) Logout() http.HandlerFunc {
 		}
 
 		res.JSON(w, http.StatusOK, nil, nil)
+	}
+}
+
+func (h *AuthHandler) IsTokenInvalid() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		query := r.URL.Query()
+		token := query.Get("token")
+		if token == "" {
+			res.Error(w, apperrors.ErrBadRequest)
+			return
+		}
+
+		invalid, err := h.authService.IsTokenInvalid(r.Context(), token)
+		if err != nil {
+			res.Error(w, err)
+			return
+		}
+
+		data := auth.IsTokenInvalidResponse{
+			Invalid: invalid,
+		}
+
+		res.JSON(w, http.StatusOK, data, nil)
 	}
 }

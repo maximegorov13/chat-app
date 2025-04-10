@@ -62,3 +62,11 @@ func (s *AuthService) Logout(ctx context.Context, token string) error {
 
 	return s.tokenRepo.InvalidateToken(ctx, token, time.Hour)
 }
+
+func (s *AuthService) IsTokenInvalid(ctx context.Context, token string) (bool, error) {
+	if token == "" {
+		return true, apperrors.ErrUnauthorized
+	}
+
+	return s.tokenRepo.IsTokenInvalid(ctx, token)
+}

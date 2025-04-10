@@ -2,10 +2,12 @@ package service_test
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"testing"
 
 	"github.com/Masterminds/squirrel"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 
 	"github.com/maximegorov13/chat-app/id/pkg/jwt"
@@ -24,7 +26,19 @@ import (
 	userservice "github.com/maximegorov13/chat-app/id/internal/user/service"
 )
 
-func setupTest(t testing.TB) (auth.AuthService, user.UserService, auth.TokenRepository, func(userID int64), func(token string)) {
+type testDependencies struct {
+	authService         auth.AuthService
+	userService         user.UserService
+	tokenRepo           auth.TokenRepository
+	cleanupUser         func(userID int64)
+	cleanupInvalidToken func(token string)
+}
+
+func getUniqueLogin() string {
+	return fmt.Sprintf("user-%s", uuid.New())
+}
+
+func setupTest(t testing.TB) *testDependencies {
 	t.Helper()
 
 	conf, err := configs.Load("../../../.env")
@@ -77,33 +91,37 @@ func setupTest(t testing.TB) (auth.AuthService, user.UserService, auth.TokenRepo
 		}
 	}
 
-	authService := authservice.NewAuthService(authservice.AuthServiceDeps{
-		UserRepo:  userRepo,
-		TokenRepo: tokenRepo,
-		JWT:       jwtMaker,
-	})
-	userService := userservice.NewUserService(userservice.UserServiceDeps{
-		UserRepo: userRepo,
-	})
-
-	return authService, userService, tokenRepo, cleanupUser, cleanupInvalidToken
+	return &testDependencies{
+		authService: authservice.NewAuthService(authservice.AuthServiceDeps{
+			UserRepo:  userRepo,
+			TokenRepo: tokenRepo,
+			JWT:       jwtMaker,
+		}),
+		userService: userservice.NewUserService(userservice.UserServiceDeps{
+			UserRepo: userRepo,
+		}),
+		tokenRepo:           tokenRepo,
+		cleanupUser:         cleanupUser,
+		cleanupInvalidToken: cleanupInvalidToken,
+	}
 }
 
 func TestAuthService_Login(t *testing.T) {
-	authService, userService, _, cleanupUser, _ := setupTest(t)
+	deps := setupTest(t)
 
 	ctx := context.Background()
 
 	t.Run("successful login", func(t *testing.T) {
+		uniqueLogin := getUniqueLogin()
 		registerReq := &user.RegisterRequest{
-			Login:    "testuser",
+			Login:    uniqueLogin,
 			Name:     "Test User",
 			Password: "12345678",
 		}
 
-		registeredUser, err := userService.Register(ctx, registerReq)
+		registeredUser, err := deps.userService.Register(ctx, registerReq)
 		t.Cleanup(func() {
-			cleanupUser(registeredUser.ID)
+			deps.cleanupUser(registeredUser.ID)
 		})
 		require.NoError(t, err)
 
@@ -112,21 +130,22 @@ func TestAuthService_Login(t *testing.T) {
 			Password: registerReq.Password,
 		}
 
-		token, err := authService.Login(ctx, loginReq)
+		token, err := deps.authService.Login(ctx, loginReq)
 		require.NoError(t, err)
 		require.NotEmpty(t, token)
 	})
 
 	t.Run("invalid credentials wrong password", func(t *testing.T) {
+		uniqueLogin := getUniqueLogin()
 		registerReq := &user.RegisterRequest{
-			Login:    "testuser",
+			Login:    uniqueLogin,
 			Name:     "Test User",
 			Password: "12345678",
 		}
 
-		registeredUser, err := userService.Register(ctx, registerReq)
+		registeredUser, err := deps.userService.Register(ctx, registerReq)
 		t.Cleanup(func() {
-			cleanupUser(registeredUser.ID)
+			deps.cleanupUser(registeredUser.ID)
 		})
 		require.NoError(t, err)
 
@@ -135,38 +154,40 @@ func TestAuthService_Login(t *testing.T) {
 			Password: "wrongpassword",
 		}
 
-		_, err = authService.Login(ctx, loginReq)
+		_, err = deps.authService.Login(ctx, loginReq)
 		require.Error(t, err)
 		require.ErrorIs(t, err, apperrors.ErrInvalidCredentials)
 	})
 
 	t.Run("invalid credentials not found user", func(t *testing.T) {
+		uniqueLogin := getUniqueLogin()
 		loginReq := &auth.LoginRequest{
-			Login:    "testuser",
+			Login:    uniqueLogin,
 			Password: "12345678",
 		}
 
-		_, err := authService.Login(ctx, loginReq)
+		_, err := deps.authService.Login(ctx, loginReq)
 		require.Error(t, err)
 		require.ErrorIs(t, err, apperrors.ErrInvalidCredentials)
 	})
 }
 
 func TestAuthService_Logout(t *testing.T) {
-	authService, userService, tokenRepo, cleanupUser, cleanupInvalidToken := setupTest(t)
+	deps := setupTest(t)
 
 	ctx := context.Background()
 
 	t.Run("successful logout", func(t *testing.T) {
+		uniqueLogin := getUniqueLogin()
 		registerReq := &user.RegisterRequest{
-			Login:    "testuser",
+			Login:    uniqueLogin,
 			Name:     "Test User",
 			Password: "12345678",
 		}
 
-		registeredUser, err := userService.Register(ctx, registerReq)
+		registeredUser, err := deps.userService.Register(ctx, registerReq)
 		t.Cleanup(func() {
-			cleanupUser(registeredUser.ID)
+			deps.cleanupUser(registeredUser.ID)
 		})
 		require.NoError(t, err)
 
@@ -175,24 +196,93 @@ func TestAuthService_Logout(t *testing.T) {
 			Password: registerReq.Password,
 		}
 
-		token, err := authService.Login(ctx, loginReq)
+		token, err := deps.authService.Login(ctx, loginReq)
 		t.Cleanup(func() {
-			cleanupInvalidToken(token)
+			deps.cleanupInvalidToken(token)
 		})
 		require.NoError(t, err)
 		require.NotEmpty(t, token)
 
-		err = authService.Logout(ctx, token)
+		err = deps.authService.Logout(ctx, token)
 		require.NoError(t, err)
 
-		invalid, err := tokenRepo.IsTokenInvalid(ctx, token)
+		invalid, err := deps.tokenRepo.IsTokenInvalid(ctx, token)
 		require.NoError(t, err)
 		require.True(t, invalid)
 	})
 
 	t.Run("logout with empty token", func(t *testing.T) {
-		err := authService.Logout(ctx, "")
+		err := deps.authService.Logout(ctx, "")
 		require.Error(t, err)
 		require.ErrorIs(t, err, apperrors.ErrUnauthorized)
+	})
+}
+
+func TestAuthService_IsTokenInvalid(t *testing.T) {
+	deps := setupTest(t)
+
+	ctx := context.Background()
+
+	t.Run("invalid token", func(t *testing.T) {
+		uniqueLogin := getUniqueLogin()
+		registerReq := &user.RegisterRequest{
+			Login:    uniqueLogin,
+			Name:     "Test User",
+			Password: "12345678",
+		}
+
+		registeredUser, err := deps.userService.Register(ctx, registerReq)
+		t.Cleanup(func() {
+			deps.cleanupUser(registeredUser.ID)
+		})
+		require.NoError(t, err)
+
+		loginReq := &auth.LoginRequest{
+			Login:    registerReq.Login,
+			Password: registerReq.Password,
+		}
+
+		token, err := deps.authService.Login(ctx, loginReq)
+		t.Cleanup(func() {
+			deps.cleanupInvalidToken(token)
+		})
+		require.NoError(t, err)
+
+		err = deps.authService.Logout(ctx, token)
+		require.NoError(t, err)
+
+		invalid, err := deps.authService.IsTokenInvalid(ctx, token)
+		require.NoError(t, err)
+		require.True(t, invalid)
+	})
+
+	t.Run("valid token", func(t *testing.T) {
+		uniqueLogin := getUniqueLogin()
+		registerReq := &user.RegisterRequest{
+			Login:    uniqueLogin,
+			Name:     "Test User",
+			Password: "12345678",
+		}
+
+		registeredUser, err := deps.userService.Register(ctx, registerReq)
+		t.Cleanup(func() {
+			deps.cleanupUser(registeredUser.ID)
+		})
+		require.NoError(t, err)
+
+		loginReq := &auth.LoginRequest{
+			Login:    registerReq.Login,
+			Password: registerReq.Password,
+		}
+
+		token, err := deps.authService.Login(ctx, loginReq)
+		t.Cleanup(func() {
+			deps.cleanupInvalidToken(token)
+		})
+		require.NoError(t, err)
+
+		invalid, err := deps.authService.IsTokenInvalid(ctx, token)
+		require.NoError(t, err)
+		require.False(t, invalid)
 	})
 }

@@ -2,9 +2,11 @@ package service_test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/Masterminds/squirrel"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/crypto/bcrypt"
 
@@ -16,7 +18,17 @@ import (
 	userservice "github.com/maximegorov13/chat-app/id/internal/user/service"
 )
 
-func setupTest(t testing.TB) (user.UserService, user.UserRepository, func(userID int64)) {
+type testDependencies struct {
+	userService user.UserService
+	userRepo    user.UserRepository
+	cleanupUser func(userID int64)
+}
+
+func getUniqueLogin() string {
+	return fmt.Sprintf("user-%s", uuid.New())
+}
+
+func setupTest(t testing.TB) *testDependencies {
 	t.Helper()
 
 	conf, err := configs.Load("../../../.env")
@@ -26,9 +38,6 @@ func setupTest(t testing.TB) (user.UserService, user.UserRepository, func(userID
 	require.NoError(t, err)
 
 	userRepo := userpg.NewUserRepository(pgClient)
-	userService := userservice.NewUserService(userservice.UserServiceDeps{
-		UserRepo: userRepo,
-	})
 
 	cleanupUser := func(userID int64) {
 		query, args, err := pgClient.Sb.
@@ -47,24 +56,31 @@ func setupTest(t testing.TB) (user.UserService, user.UserRepository, func(userID
 		}
 	}
 
-	return userService, userRepo, cleanupUser
+	return &testDependencies{
+		userService: userservice.NewUserService(userservice.UserServiceDeps{
+			UserRepo: userRepo,
+		}),
+		userRepo:    userRepo,
+		cleanupUser: cleanupUser,
+	}
 }
 
 func TestUserService_Register(t *testing.T) {
-	userService, repo, cleanupUser := setupTest(t)
+	deps := setupTest(t)
 
 	ctx := context.Background()
 
 	t.Run("successful registration", func(t *testing.T) {
+		uniqueLogin := getUniqueLogin()
 		registerReq := &user.RegisterRequest{
-			Login:    "testuser",
+			Login:    uniqueLogin,
 			Name:     "Test User",
 			Password: "12345678",
 		}
 
-		u, err := userService.Register(ctx, registerReq)
+		u, err := deps.userService.Register(ctx, registerReq)
 		t.Cleanup(func() {
-			cleanupUser(u.ID)
+			deps.cleanupUser(u.ID)
 		})
 		require.NoError(t, err)
 		require.NotNil(t, u)
@@ -78,46 +94,48 @@ func TestUserService_Register(t *testing.T) {
 		require.False(t, u.CreatedAt.IsZero())
 		require.False(t, u.UpdatedAt.IsZero())
 
-		dbUser, err := repo.FindByLogin(ctx, registerReq.Login)
+		dbUser, err := deps.userRepo.FindByLogin(ctx, registerReq.Login)
 		require.NoError(t, err)
 		require.NotNil(t, dbUser)
 		require.Equal(t, u, dbUser)
 	})
 
 	t.Run("user already exists", func(t *testing.T) {
+		uniqueLogin := getUniqueLogin()
 		registerReq := &user.RegisterRequest{
-			Login:    "testuser",
+			Login:    uniqueLogin,
 			Name:     "Test User",
 			Password: "12345678",
 		}
 
-		u, err := userService.Register(ctx, registerReq)
+		u, err := deps.userService.Register(ctx, registerReq)
 		t.Cleanup(func() {
-			cleanupUser(u.ID)
+			deps.cleanupUser(u.ID)
 		})
 		require.NoError(t, err)
 
-		_, err = userService.Register(ctx, registerReq)
+		_, err = deps.userService.Register(ctx, registerReq)
 		require.Error(t, err)
 		require.ErrorIs(t, err, apperrors.ErrUserExists)
 	})
 }
 
 func TestUserService_UpdateUser(t *testing.T) {
-	userService, _, cleanupUser := setupTest(t)
+	deps := setupTest(t)
 
 	ctx := context.Background()
 
 	t.Run("successful update user", func(t *testing.T) {
+		uniqueLogin := getUniqueLogin()
 		registerReq := &user.RegisterRequest{
-			Login:    "user_to_update",
+			Login:    uniqueLogin,
 			Name:     "Original Name",
 			Password: "originalpass",
 		}
 
-		registeredUser, err := userService.Register(ctx, registerReq)
+		registeredUser, err := deps.userService.Register(ctx, registerReq)
 		t.Cleanup(func() {
-			cleanupUser(registeredUser.ID)
+			deps.cleanupUser(registeredUser.ID)
 		})
 		require.NoError(t, err)
 
@@ -126,7 +144,7 @@ func TestUserService_UpdateUser(t *testing.T) {
 			Name:     "Updated Name",
 			Password: "newpassword123",
 		}
-		updatedUser, err := userService.UpdateUser(ctx, registeredUser.ID, updateReq)
+		updatedUser, err := deps.userService.UpdateUser(ctx, registeredUser.ID, updateReq)
 		require.NoError(t, err)
 		require.NotNil(t, updatedUser)
 		require.Equal(t, updateReq.Login, updatedUser.Login)
@@ -140,12 +158,13 @@ func TestUserService_UpdateUser(t *testing.T) {
 	})
 
 	t.Run("not found", func(t *testing.T) {
+		uniqueLogin := getUniqueLogin()
 		updateReq := &user.UpdateUserRequest{
-			Login:    "updated_login",
+			Login:    uniqueLogin,
 			Name:     "Updated Name",
 			Password: "newpassword123",
 		}
-		_, err := userService.UpdateUser(ctx, 9999999999, updateReq)
+		_, err := deps.userService.UpdateUser(ctx, 9999999999, updateReq)
 		require.Error(t, err)
 		require.ErrorIs(t, err, apperrors.ErrNotFound)
 	})
