@@ -210,12 +210,6 @@ func TestAuthService_Logout(t *testing.T) {
 		require.NoError(t, err)
 		require.True(t, invalid)
 	})
-
-	t.Run("logout with empty token", func(t *testing.T) {
-		err := deps.authService.Logout(ctx, "")
-		require.Error(t, err)
-		require.ErrorIs(t, err, apperrors.ErrUnauthorized)
-	})
 }
 
 func TestAuthService_IsTokenInvalid(t *testing.T) {

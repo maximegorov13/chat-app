@@ -68,6 +68,10 @@ func (h *AuthHandler) Logout() http.HandlerFunc {
 			return
 		}
 		token := tokenParts[1]
+		if token == "" {
+			res.Error(w, apperrors.ErrUnauthorized)
+			return
+		}
 
 		err := h.authService.Logout(r.Context(), token)
 		if err != nil {
@@ -75,7 +79,7 @@ func (h *AuthHandler) Logout() http.HandlerFunc {
 			return
 		}
 
-		res.JSON(w, http.StatusOK, nil, nil)
+		res.JSON[any](w, http.StatusOK, nil, nil)
 	}
 }
 

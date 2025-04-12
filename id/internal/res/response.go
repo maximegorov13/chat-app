@@ -4,22 +4,30 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"reflect"
 
 	"github.com/go-ozzo/ozzo-validation"
 
 	"github.com/maximegorov13/chat-app/id/internal/apperrors"
 )
 
-func JSON(w http.ResponseWriter, statusCode int, data any, meta *ResponseMeta) {
+func JSON[T any](w http.ResponseWriter, statusCode int, data T, meta *ResponseMeta) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
-	if data == nil {
-		data = map[string]any{}
-	}
+
 	if meta == nil {
 		meta = &ResponseMeta{}
 	}
-	json.NewEncoder(w).Encode(Response{
+
+	if !reflect.ValueOf(data).IsValid() {
+		json.NewEncoder(w).Encode(Response[map[string]any]{
+			Data: map[string]any{},
+			Meta: meta,
+		})
+		return
+	}
+
+	json.NewEncoder(w).Encode(Response[T]{
 		Data: data,
 		Meta: meta,
 	})
@@ -45,7 +53,7 @@ func Error(w http.ResponseWriter, err error) {
 
 func sendAppError(w http.ResponseWriter, err *apperrors.Error) {
 	w.WriteHeader(err.Code)
-	json.NewEncoder(w).Encode(Response{
+	json.NewEncoder(w).Encode(Response[map[string]any]{
 		Meta: &ResponseMeta{},
 		Data: map[string]any{},
 		Error: &ErrorResponse{
@@ -66,7 +74,7 @@ func sendValidateError(w http.ResponseWriter, errs validation.Errors) {
 		})
 	}
 
-	json.NewEncoder(w).Encode(Response{
+	json.NewEncoder(w).Encode(Response[map[string]any]{
 		Meta: &ResponseMeta{},
 		Data: map[string]any{},
 		Error: &ErrorResponse{
@@ -79,7 +87,7 @@ func sendValidateError(w http.ResponseWriter, errs validation.Errors) {
 
 func sendDefaultError(w http.ResponseWriter) {
 	w.WriteHeader(apperrors.ErrInternalServerError.Code)
-	json.NewEncoder(w).Encode(Response{
+	json.NewEncoder(w).Encode(Response[map[string]any]{
 		Meta: &ResponseMeta{},
 		Data: map[string]any{},
 		Error: &ErrorResponse{
